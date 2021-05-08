@@ -66,6 +66,8 @@ scheduler = get_linear_schedule_with_warmup(
 
 EPOCHS = config['model']['num_epochs']
 
+with open("logger.txt", "w") as f:
+    f.write(f"")
 
 for epoch in range(EPOCHS):
     print(f"Epoch {epoch + 1}/{EPOCHS}")
@@ -88,6 +90,13 @@ for epoch in range(EPOCHS):
         device,
         )
     print(f"Val Loss {val_loss} Eval Accuracy {eval_acc}")
-
+    print(f"-" * 10)
+    
+    with open("logger.txt", "a") as f:
+        f.write(f"Epoch {epoch + 1}/{EPOCHS}\n")
+        f.write(f"-" * 10 + "\n")
+        f.write(f"Train Loss {train_loss} Train Accuracy {train_acc}"+ "\n")
+        f.write(f"Val Loss {val_loss} Eval Accuracy {eval_acc}\n")
+        f.write(f"-" * 10 + "\n")
 
 torch.save(model, 'model.pth')
