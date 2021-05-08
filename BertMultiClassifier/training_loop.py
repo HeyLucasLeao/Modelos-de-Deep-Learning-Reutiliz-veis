@@ -66,6 +66,7 @@ scheduler = get_linear_schedule_with_warmup(
 
 EPOCHS = config['model']['num_epochs']
 
+
 for epoch in range(EPOCHS):
     print(f"Epoch {epoch + 1}/{EPOCHS}")
     print(f"-" * 10)
@@ -78,15 +79,15 @@ for epoch in range(EPOCHS):
         device,
         scheduler,
         )
-    print(f"Train Loss {train_loss} Train Acc {train_acc}")
+    print(f"Train Loss {train_loss} Train Accuracy {train_acc}")
 
-    val_loss, val_acc = eval_model(
+    val_loss, eval_acc = eval_model(
         model, 
         VALID_DATA_LOADER,
         criterion,
         device,
         )
-    print(f"Val Loss {val_loss} Val Acc {val_acc}")
+    print(f"Val Loss {val_loss} Eval Accuracy {eval_acc}")
 
 
 torch.save(model, 'model.pth')

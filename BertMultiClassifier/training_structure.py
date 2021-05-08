@@ -3,9 +3,23 @@ import torch
 import yaml
 from tqdm import tqdm
 
-
 with open('config.yml', 'r') as f:
     config = yaml.safe_load(f)
+
+def accuracy(outputs, targets):
+    softmax = torch.nn.Softmax(dim=-1)
+    predictions = softmax(outputs)
+    predictions = torch.argmax(outputs, axis=1)
+    res = []
+    for i in range(len(predictions)):
+        if predictions[i] == targets[i]:
+            res.append(1)
+        else:
+            res.append(0)
+    res = sum(res) / len(res)
+
+    return res
+
 
 def train_epoch(
                 model, 
@@ -17,9 +31,8 @@ def train_epoch(
 
     model.train()
     losses = []
-    train_acc = 0
-
-    for data in tqdm(data_loader):
+    acc = []
+    for data in tqdm(data_loader, leave=False):
         input_ids = data['input_ids'].to(device)
         attention_mask = data['attention_mask'].to(device)
         targets = torch.flatten(data['targets'].to(device))
@@ -27,15 +40,15 @@ def train_epoch(
         outputs = model(
             input_ids=input_ids.squeeze(),
             attention_mask=attention_mask.squeeze()
-            )        
+            )
+
         #função de perda
-        predictions = (outputs >= 0.50).type(torch.long)
         loss = criterion(outputs, targets)
         losses.append(loss.item())
 
-        #Eval Accuracy
-        train_acc += torch.sum(predictions == targets)
-        
+        #Train Accuracy
+        acc.append(accuracy(outputs, targets))
+
         #Back Propagation
         optimizer.zero_grad()
         loss.backward()
@@ -44,10 +57,10 @@ def train_epoch(
         #atualiza o learning rate
         scheduler.step()
 
-    total_acc = train_acc/len(data_loader.dataset)
     avg_loss = np.mean(losses)
+    acc = sum(acc) / len(acc)
 
-    return avg_loss,total_acc
+    return avg_loss, acc
 
 def eval_model(
             model, 
@@ -57,13 +70,13 @@ def eval_model(
 
     model.eval()
     losses = []
-    eval_acc = 0
+    acc = []
     with torch.no_grad():
         for data in data_loader:
 
             input_ids = data['input_ids'].to(device)
             attention_mask = data['attention_mask'].to(device)
-            targets = data['targets'].to(device)
+            targets = torch.flatten(data['targets'].to(device))
 
             outputs = model(
                 input_ids=input_ids,
@@ -71,14 +84,12 @@ def eval_model(
                 )
 
             #função de perda
-            predictions = (outputs >= 0.50).type(torch.long)
             loss = criterion(outputs, targets)
             losses.append(loss.item())
 
             #Eval Accuracy
-            eval_acc += torch.sum(predictions == targets)
-
-
-    total_acc = eval_acc/len(data_loader.dataset)
+            acc.append(accuracy(outputs, targets))
+            
+    acc = sum(acc) / len(acc)
     avg_loss = np.mean(losses)
-    return avg_loss, total_acc
+    return avg_loss, acc
