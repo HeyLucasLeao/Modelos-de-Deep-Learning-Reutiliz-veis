@@ -36,6 +36,7 @@ class ShapingDataset(Dataset):
             'targets': torch.LongTensor([self.targets[item]]) 
         }
 
+
 def create_dataloader(df, max_len, bs, num_workers=4):
     dataset = ShapingDataset(
         texts=df['texts'].to_numpy(),
@@ -45,3 +46,20 @@ def create_dataloader(df, max_len, bs, num_workers=4):
     data_loader = DataLoader(dataset, bs, num_workers)
 
     return data_loader
+
+def encoding_text(text):
+    encoding = TOKENIZER(text,
+    padding='max_length',
+    truncation=True,
+    return_tensors='pt',
+    max_length=config['model']['max_seq_length']
+        )
+
+    return encoding
+
+def labelling_text(input_ids, attention_mask, model):
+    output = model(input_ids=input_ids, attention_mask=attention_mask)
+    softmax = torch.nn.Softmax(dim=-1)
+    prediction = softmax(output)
+    prediction = torch.argmax(prediction, axis=1)
+    return prediction

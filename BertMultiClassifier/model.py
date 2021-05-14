@@ -35,8 +35,8 @@ class Classifier(nn.Module):
 
     def forward(self, input_ids, attention_mask):
         output = self.pretrained_model.forward(
-            input_ids = input_ids.squeeze(),
-            attention_mask = attention_mask.squeeze()
+            input_ids = input_ids,
+            attention_mask = attention_mask
         )
         output = flatten(output.last_hidden_state, start_dim=1)
         output = self.linear1(output)
